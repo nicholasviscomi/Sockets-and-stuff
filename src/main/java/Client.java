@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.time.LocalTime;
 
 
 public class Client {
@@ -13,15 +14,16 @@ public class Client {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-            String clientMessage = "", servMessage;
-            while (!clientMessage.equals("stop")) {
-                clientMessage = br.readLine(); //read message from terminal
-                out.writeUTF(clientMessage); //write the message to where teh server can get it
-                out.flush(); //clear the output stream
 
-                servMessage = in.readUTF(); //read message from the server
-                System.out.println("Server: " + servMessage);
-            }
+
+            String servMessage = in.readUTF(), clientMessage;
+            System.out.println("Server: " + servMessage);
+
+//            clientMessage = br.readLine();
+            out.writeUTF("connection Started" + " (" + LocalTime.now() + ")");
+
+//            clientMessage = br.readLine(); //have the program not end for a little bit
+//            out.writeUTF(clientMessage);
 
             //close everything
             in.close();
