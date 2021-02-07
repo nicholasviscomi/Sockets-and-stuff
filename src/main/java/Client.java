@@ -14,25 +14,28 @@ public class Client {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-//            String servMessage = in.readUTF(), clientMessage = "";
-//            System.out.println("Server: " + servMessage);
-//
-////            clientMessage = br.readLine();
+            String servMessage = in.readUTF(), clientMessage;
+            System.out.println("Server: " + servMessage);
+
+//            clientMessage = br.readLine();
 //            out.writeUTF("connection Started" + " (" + LocalTime.now() + ")");
 
-//            br.readLine(); //have the program not end for a little bit
-//            clientMessage = br.readLine();
-//            out.writeUTF(clientMessage);
+            //have the program not end for a little bit
+            clientMessage = br.readLine();
+            out.writeUTF(clientMessage);
+            servMessage = in.readUTF();
+            System.out.println("Server: " + servMessage);
 
-            String clientMessage = "", servMessage;
-            while (!clientMessage.equals("stop")) {
-                clientMessage = br.readLine(); //read message from terminal
-                out.writeUTF(clientMessage); //write the message to where teh server can get it
-                out.flush(); //clear the output stream
-
-                servMessage = in.readUTF(); //read message from the server
-                System.out.println("Server: " + servMessage);
-            }
+            br.readLine();
+//            String clientMessage = "", servMessage;
+//            while (!clientMessage.equals("stop")) {
+//                clientMessage = br.readLine(); //read message from terminal
+//                out.writeUTF(clientMessage); //write the message to where teh server can get it
+//                out.flush(); //clear the output stream
+//
+//                servMessage = in.readUTF(); //read message from the server
+//                System.out.println("Server: " + servMessage);
+//            }
 
             //close everything
             in.close();

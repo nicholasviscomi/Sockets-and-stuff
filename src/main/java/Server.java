@@ -4,7 +4,6 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 
 
 public class Server {
@@ -81,33 +80,21 @@ class ServerThread extends Thread {
         try {
             in = new DataInputStream(socket.getInputStream()); //where you can get the message
             out = new DataOutputStream(socket.getOutputStream()); //where you can write the message to the socket
-//            out.writeUTF("Successful connection, welcome"); //send a message to show success
-            br = new BufferedReader(new InputStreamReader(System.in));
+            out.writeUTF("Welcome (connected)"); //send a message to show success
+//            br = new BufferedReader(new InputStreamReader(System.in));
 
+            String clientMessage = in.readUTF(), serverMessage;
 
-            String clientMessage = "", serverMessage, prev = "";
-            while (!clientMessage.equalsIgnoreCase("stop")) {
-                clientMessage = in.readUTF();
-//                if (!clientMessage.equals(prev)) {
-//                    prev = clientMessage;
-                    System.out.println("Client: " + clientMessage);
+            if (clientMessage.contains("GET")) {
+                System.out.println("Get request received");
+                serverMessage = "you have gotten the new page";
+                out.writeUTF(serverMessage);
+            }
 
-                    serverMessage = br.readLine();
-                    out.writeUTF(serverMessage);
-//                    if (clientMessage.contains("GET")) {
-//                        System.out.println("Get request received");
-//                        serverMessage = "you have gotten the new page";
-//                        out.writeUTF(serverMessage);
-//                    }
-//
-//                    if (clientMessage.contains("POST")) {
-//                        System.out.println("Post request received");
-//                        serverMessage = "thank you for sending your data";
-//                        out.writeUTF(serverMessage);
-//                    }
-
-                    out.flush();
-//                }
+            if (clientMessage.contains("POST")) {
+                System.out.println("Post request received");
+                serverMessage = "thank you for sending your data";
+                out.writeUTF(serverMessage);
             }
 
         } catch (Exception e) {
