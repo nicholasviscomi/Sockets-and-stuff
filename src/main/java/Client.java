@@ -3,7 +3,6 @@ import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.time.LocalTime;
 
 
 public class Client {
@@ -14,37 +13,20 @@ public class Client {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-            String servMessage = in.readUTF(), clientMessage;
-            System.out.println("Server: " + servMessage);
+            String clientMessage = "", servMessage;
+            while (!clientMessage.equals("stop")) {
+                clientMessage = br.readLine(); //read message from terminal
 
-//            clientMessage = br.readLine();
-//            out.writeUTF("connection Started" + " (" + LocalTime.now() + ")");
+                out.writeUTF(clientMessage); //write the message to where teh server can get it
+                out.flush(); //clear the output stream
 
-            //have the program not end for a little bit
-            clientMessage = br.readLine();
-            out.writeUTF(clientMessage);
-            servMessage = in.readUTF();
-            System.out.println("Server: " + servMessage);
-
-            br.readLine();
-//            String clientMessage = "", servMessage;
-//            while (!clientMessage.equals("stop")) {
-//                clientMessage = br.readLine(); //read message from terminal
-//                out.writeUTF(clientMessage); //write the message to where teh server can get it
-//                out.flush(); //clear the output stream
-//
-//                servMessage = in.readUTF(); //read message from the server
-//                System.out.println("Server: " + servMessage);
-//            }
+                servMessage = in.readUTF(); //read message from the server
+                System.out.println("Server: " + servMessage); //print server message
+            }
 
             //close everything
-            in.close();
-            out.close();
             socket.close();
-            br.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) { }
     }
 }
 
