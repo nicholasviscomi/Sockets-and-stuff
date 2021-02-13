@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -54,9 +53,9 @@ class ClientHandler implements Runnable {
 
         try {
             in = new DataInputStream(socket.getInputStream()); //where you can get the message
-            out = new DataOutputStream(socket.getOutputStream());//where you can write the message to the socket
+            out = new DataOutputStream(socket.getOutputStream()); //where you can write the message to the socket
 
-            out.writeUTF(String.valueOf(socket.getPort()));
+            out.writeUTF(String.valueOf(socket.getPort())); //send user their port number aka username
             out.flush();
 
             out.writeUTF("Enter username to chat with: ");
@@ -64,16 +63,45 @@ class ClientHandler implements Runnable {
             recipient = Integer.parseInt(recipientStr);
             System.out.println("Attempting to connect to (" + recipient + ")");
 
-            if (!userIsOnline(recipient)) {
-                System.out.println("user not online :("); throw new Exception(); }
-            else { System.out.println("user is online!"); }
+            if (!userIsOnline(recipient)) { //make sure user is finding a real user and not themselves
+                System.out.println("no such user :(");
+                throw new NoSuchUserException();
+            } else {
+                System.out.println("user is online!");
+            }
 
-        } catch (NumberFormatException nfe) { System.out.println("Invalid username");
+        } catch (NumberFormatException nfe) {
+
+            //input to username was not a number
+            System.out.println("Invalid username");
+            try {
+                assert out != null;
+                out.writeInt(ServerErrors.toInt(Error.InvalidUsername));
+            } catch (IOException e) {
+                System.out.println("error writing invalid username");
+            }
+
+        } catch (NoSuchUserException noSuchUserException) {
+
+            //no user was ofnud online
+            try {
+                out.writeInt(ServerErrors.toInt(Error.NoSuchUser));
+            } catch (IOException e) {
+                System.out.println("error writing No such user");
+            }
+
+            try {
+                socket.close();
+            } catch (IOException e) {
+                System.out.println("error closing socket");
+            }
+
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             System.out.println("another ClientHandler exception ");
         }
 
+        //ALLOW USERS TO DISCONNECT FROM EACH OTHER NOT JUST GET KICKED
 
         String clientMessage;
         while (true) {
@@ -84,35 +112,17 @@ class ClientHandler implements Runnable {
                 }
 
                 clientMessage = in.readUTF();
-                System.out.println("Client: " + clientMessage); // writing the received message
-                //classify the message and respond appropriately
-//                if (clientMessage.contains("GET")) {
-//                    System.out.println("Get request received");
-//                    serverMessage = "you have gotten the new page";
-//                    out.writeUTF(serverMessage);
-//                    out.flush();
-//                } else if (clientMessage.contains("POST")) {
-//                    System.out.println("Post request received");
-//                    serverMessage = "thank you for sending your data";
-//                    out.writeUTF(serverMessage);
-//                    out.flush();
-//                } else if (clientMessage.contains("SET")) {
-//                    System.out.println("Set request received");
-//                    serverMessage = "thanks for setting the data";
-//                    out.writeUTF(serverMessage);
-//                    out.flush();
-//                } else {
-//                    System.out.println("Other input was sent");
-//                    serverMessage = "unknown input (echo = " + clientMessage + ")";
-//                    out.writeUTF(serverMessage);
-//                    out.flush();
-//                }
+                if (clientMessage.equalsIgnoreCase("leave")) { //close both clients, ideally would just disconnect them
+                    socket.close();
+                    Server.getClients().get(recipient).close();
+                }
 
                 DataOutputStream recipientOut = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
                 recipientOut.writeUTF(clientMessage);
                 recipientOut.flush();
+
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 System.out.println("error in ClientHandler loop");
                 break;
             }
@@ -125,9 +135,14 @@ class ClientHandler implements Runnable {
 
     }
 
-    boolean userIsOnline(int user) {
+    boolean userIsOnline(int id) {
         //CLIENTS DOES NOT REMOVE A CLIENT WHEN THE GO OFFLINE
-        System.out.println("clients: " + Server.getClients());
-        return Server.getClients().get(user) != null;
+//        System.out.println("clients: " + Server.getClients());
+        HashMap<Integer, Socket> clients = Server.getClients();
+        Socket user = clients.get(id);
+
+        return (user != null) && (!(user.getPort() == socket.getPort()));
     }
 }
+
+class NoSuchUserException extends Exception {}

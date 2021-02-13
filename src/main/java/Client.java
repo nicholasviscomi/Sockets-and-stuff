@@ -11,7 +11,7 @@ public class Client {
         DataInputStream in = null;
         BufferedReader br = null;
         Socket socket;
-        String recipient = "";
+        int recipient = 0;
 
         try {
             socket = new Socket("localhost", 80);
@@ -23,8 +23,11 @@ public class Client {
             System.out.println("Username: " + username);
 
             System.out.print(in.readUTF()); //"enter username to chat with"
-            recipient = br.readLine();
-            out.writeUTF(recipient);
+            recipient = Integer.parseInt(br.readLine());
+            out.writeUTF(String.valueOf(recipient));
+        } catch (NumberFormatException numberFormatException) {
+            System.out.println("invalid username input");
+            System.exit(0);
         } catch (Exception ignored) {
             System.out.println("exception in client initialization");
         }
@@ -39,8 +42,8 @@ public class Client {
                     String clientMessage = finalBr.readLine();
                     finalOut.writeUTF(clientMessage);
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("failure in send loop :(");
+//                    e.printStackTrace();
+//                    System.out.println("failure in send loop :(");
                     System.exit(0);
                     break;
                 }
@@ -48,7 +51,7 @@ public class Client {
         });
 
         final DataInputStream finalIn = in;
-        final String finalRecipient = recipient;
+        final int finalRecipient = recipient;
         Thread readMessage = new Thread(() -> {
             while (true) {
                 try {
@@ -57,10 +60,21 @@ public class Client {
                         System.out.println(addPortNum(servMessage, finalRecipient));
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("failure in read loop :(");
+//                    e.printStackTrace();
+//                    System.out.println("failure in read loop :(");
                     System.exit(0);
                     break;
+                }
+            }
+        });
+
+        Thread errorListener = new Thread(() -> {
+            while (true) {
+                try {
+                    int error = finalIn.readInt();
+                    System.out.println();
+                } catch (Exception e) {
+                    System.exit(0);
                 }
             }
         });
@@ -77,9 +91,10 @@ public class Client {
 
         readMessage.start();
         sendMessage.start();
+        errorListener.start();
     }
 
-    static String addPortNum(String msg, String username) {
+    static String addPortNum(String msg, int username) {
         return "(" + username + ") " + msg;
     }
 }
