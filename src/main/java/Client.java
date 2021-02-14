@@ -3,10 +3,9 @@ import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.Objects;
 
 
-public class Client extends Socket {
+public class Client {
 
     Socket socket;
     DataOutputStream out = null;
@@ -25,6 +24,9 @@ public class Client extends Socket {
             while (true) {
                 try {
                     String clientMessage = finalBr.readLine();
+                    if (clientMessage.equalsIgnoreCase("quit")) {
+                        System.exit(0);
+                    }
                     finalOut.writeUTF(clientMessage);
                 } catch (Exception e) {
                     System.exit(0);
@@ -48,6 +50,9 @@ public class Client extends Socket {
                                 System.out.println(Error.InvalidUsername.name());
                             case "Nil":
                             case "":
+                                break;
+                            case "Enter username to chat with: ":
+                                System.out.println(servMessage);
                                 break;
                             default:
                                 System.out.println(addPortNum(servMessage, finalRecipient));
@@ -102,6 +107,7 @@ public class Client extends Socket {
             System.out.print(in.readUTF()); //"enter username to chat with"
             recipient = Integer.parseInt(br.readLine());
             out.writeUTF(String.valueOf(recipient));
+
         } catch (NumberFormatException numberFormatException) {
             System.out.println("invalid username input");
             System.exit(0);

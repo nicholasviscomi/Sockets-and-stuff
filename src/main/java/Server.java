@@ -10,8 +10,7 @@ public class Server {
     static Socket socket;
 
     static HashMap<Integer, Socket> clients = new HashMap<>();
-
-    static HashMap<Socket, Socket> chatRooms = new HashMap<>();
+    static HashMap<Integer, ClientHandler> clientHandlers = new HashMap<>();
 
     public static void main(String[] args) {
         try {
@@ -29,8 +28,9 @@ public class Server {
                 e.printStackTrace();
                 break;
             }
-            ClientHandler clientSocket = new ClientHandler(socket);
-            new Thread(clientSocket).start();
+            ClientHandler clientHandler = new ClientHandler(socket);
+            clientHandlers.put(socket.getPort(), clientHandler);
+            new Thread(clientHandler).start();
         }
 
     }
@@ -43,6 +43,8 @@ public class Server {
 
 class ClientHandler implements Runnable {
     Socket socket;
+    DataOutputStream out;
+
     ClientHandler(Socket s) {
         this.socket = s;
     }
@@ -50,34 +52,28 @@ class ClientHandler implements Runnable {
     @Override
     public void run() {
         DataInputStream in = null;
-        DataOutputStream out = null;
+        out = null;
 
         int recipient = 0;
 
         try {
             in = new DataInputStream(socket.getInputStream()); //where you can get the message
             out = new DataOutputStream(socket.getOutputStream()); //where you can write the message to the socket
+        } catch (IOException ignored) {}
 
+        try {
+            assert out != null; assert in != null;
             out.writeUTF(String.valueOf(socket.getPort())); //send user their port number aka username
             out.flush();
 
-            out.writeUTF("Enter username to chat with: ");
-            String recipientStr = in.readUTF();
-            recipient = Integer.parseInt(recipientStr);
-            System.out.println("Attempting to connect to (" + recipient + ")");
-
-            if (!userIsOnline(recipient)) { //make sure user is finding a real user and not themselves
-                throw new NoSuchUserException();
-            } else {
-                System.out.println("Connected to (" + recipient + ")");
-            }
+            recipient = getUserToChatWith(out, in);
+            connectToUser(recipient, out);
 
         } catch (NumberFormatException nfe) {
 
             //input to username was not a number
             //should already be handled in Client.java
             try {
-                assert out != null;
                 out.writeUTF(Error.InvalidUsername.name());
             } catch (IOException e) {
                 System.out.println("error writing invalid username");
@@ -97,25 +93,28 @@ class ClientHandler implements Runnable {
             System.out.println("another ClientHandler exception ");
         }
 
-        //ALLOW USERS TO DISCONNECT FROM EACH OTHER NOT JUST GET KICKED
+        //ERROR: HAVE A BOOLEAN THAT SAYS WHETHER SOMEONE IS ALREADY CHATTING SO THERE ARE NO OVERLAPS IN CONVERSATIONS
 
         String clientMessage;
         while (true) {
             try {
-                if (in == null) {
-                    System.out.println("in == null");
-                    break;
-                }
 
                 clientMessage = in.readUTF();
                 if (clientMessage.equalsIgnoreCase("leave")) { //close both clients, ideally would just disconnect them
-                    socket.close();
-                    Server.getClients().get(recipient).close();
-                }
 
-                DataOutputStream recipientOut = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
-                recipientOut.writeUTF(clientMessage);
-                recipientOut.flush();
+                    Socket recipientSocket = Server.getClients().get(recipient);
+                    out = new DataOutputStream(socket.getOutputStream()); //stop writing to the other client
+
+                    Server.clientHandlers.get(recipientSocket.getPort()).out = new DataOutputStream(recipientSocket.getOutputStream()); //reset who the other user writes to
+
+                    recipient = getUserToChatWith(out, in);
+                    connectToUser(recipient, out);
+                } else {
+
+//                DataOutputStream recipientOut = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
+                    out.writeUTF(clientMessage);
+                    out.flush();
+                }
 
             } catch (Exception e) {
 //                e.printStackTrace();
@@ -129,6 +128,24 @@ class ClientHandler implements Runnable {
         } catch (Exception ignored) {}
 
 
+    }
+
+    public int getUserToChatWith(DataOutputStream out, DataInputStream in) throws Exception {
+        out.writeUTF("Enter username to chat with: ");
+        String recipientStr = in.readUTF();
+        int recipient = Integer.parseInt(recipientStr);
+        System.out.println("Attempting to connect to (" + recipient + ")");
+
+        return recipient;
+    }
+
+    public void connectToUser(int recipient, DataOutputStream out) throws Exception {
+        if (!userIsOnline(recipient)) { //make sure user is finding a real user and not themselves
+            throw new NoSuchUserException();
+        } else {
+            System.out.println("Connected to (" + recipient + ")");
+            this.out = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
+        }
     }
 
     boolean userIsOnline(int id) {
