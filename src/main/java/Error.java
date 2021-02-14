@@ -27,3 +27,5 @@ class ServerErrors {
         }
     }
 }
+
+class NoSuchUserException extends Exception {}

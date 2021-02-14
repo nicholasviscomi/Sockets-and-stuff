@@ -8,7 +8,10 @@ public class Server {
 
     static ServerSocket ss;
     static Socket socket;
+
     static HashMap<Integer, Socket> clients = new HashMap<>();
+
+    static HashMap<Socket, Socket> chatRooms = new HashMap<>();
 
     public static void main(String[] args) {
         try {
@@ -37,7 +40,7 @@ public class Server {
     }
 }
 
-//might not be multithreading correctly, try making the class implement runnable
+
 class ClientHandler implements Runnable {
     Socket socket;
     ClientHandler(Socket s) {
@@ -64,36 +67,29 @@ class ClientHandler implements Runnable {
             System.out.println("Attempting to connect to (" + recipient + ")");
 
             if (!userIsOnline(recipient)) { //make sure user is finding a real user and not themselves
-                System.out.println("no such user :(");
                 throw new NoSuchUserException();
             } else {
-                System.out.println("user is online!");
+                System.out.println("Connected to (" + recipient + ")");
             }
 
         } catch (NumberFormatException nfe) {
 
             //input to username was not a number
-            System.out.println("Invalid username");
+            //should already be handled in Client.java
             try {
                 assert out != null;
-                out.writeInt(ServerErrors.toInt(Error.InvalidUsername));
+                out.writeUTF(Error.InvalidUsername.name());
             } catch (IOException e) {
                 System.out.println("error writing invalid username");
             }
 
         } catch (NoSuchUserException noSuchUserException) {
 
-            //no user was ofnud online
+            //no user was found online
             try {
-                out.writeInt(ServerErrors.toInt(Error.NoSuchUser));
+                out.writeUTF(Error.NoSuchUser.name());
             } catch (IOException e) {
                 System.out.println("error writing No such user");
-            }
-
-            try {
-                socket.close();
-            } catch (IOException e) {
-                System.out.println("error closing socket");
             }
 
         } catch (Exception e) {
@@ -145,4 +141,4 @@ class ClientHandler implements Runnable {
     }
 }
 
-class NoSuchUserException extends Exception {}
+
