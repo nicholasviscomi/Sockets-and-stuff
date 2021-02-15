@@ -69,7 +69,7 @@ public class Client {
 //            while (true) {
 //                try {
 //                    int error = finalIn.readInt();
-//                    System.out.println("Error: " + error);
+//                    System.out.println("Server.Error: " + error);
 //                } catch (Exception e) {
 //                    System.exit(0);
 //                }
