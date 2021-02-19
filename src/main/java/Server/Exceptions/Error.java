@@ -1,6 +1,11 @@
+package Server.Exceptions;
+
+import Server.Server;
+
 public enum Error {
     NoSuchUser,
     InvalidUsername,
+    UserAlreadyConnected,
     Nil;
 }
 

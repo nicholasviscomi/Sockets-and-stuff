@@ -1,8 +1,8 @@
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.DataInputStream;
-import java.io.InputStreamReader;
+package Client;
+
+import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
 
 public class Client {
@@ -27,6 +27,16 @@ public class Client {
                     if (clientMessage.equalsIgnoreCase("quit")) {
                         System.exit(0);
                     }
+//                    File file = new File("/Users/nickviscomi/Desktop/IntelliJ Projects/Sockets/src/main/java/Plan.txt");
+//                    Scanner fileReader = new Scanner(file);
+//                    byte[] content = new byte[1000];
+//                    int i = 0;
+//                    while (fileReader.hasNextByte()) {
+//                        content[i] = fileReader.nextByte();
+//                        i++;
+//                    }
+//                    finalOut.writeBytes(content);
+
                     finalOut.writeUTF(clientMessage);
                 } catch (Exception e) {
                     System.exit(0);
@@ -45,9 +55,11 @@ public class Client {
 
                         switch (servMessage) {
                             case "NoSuchUser":
-                                System.out.println(Error.NoSuchUser.name());
+                                System.out.println("No Such User Exists");
                             case "InvalidUsername":
-                                System.out.println(Error.InvalidUsername.name());
+                                System.out.println("Invalid Username");
+                            case "UserAlreadyConnected":
+                                System.out.println("User is already connected to another user");
                             case "Nil":
                             case "":
                                 break;

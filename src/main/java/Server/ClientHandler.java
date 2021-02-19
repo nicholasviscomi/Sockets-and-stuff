@@ -1,3 +1,9 @@
+package Server;
+
+import Server.Exceptions.Error;
+import Server.Exceptions.NoSuchUserException;
+import Server.Exceptions.UserAlreadyConnectedException;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -31,7 +37,6 @@ public class ClientHandler implements Runnable {
             out.flush();
 
             recipient = getUserToChatWith(out, in);
-            connectToUser(recipient, out);
 
         } catch (NumberFormatException nfe) {
 
@@ -50,6 +55,14 @@ public class ClientHandler implements Runnable {
                 out.writeUTF(Error.NoSuchUser.name());
             } catch (IOException e) {
                 System.out.println("error writing No such user");
+            }
+
+        } catch (UserAlreadyConnectedException userAlreadyConnectedException) {
+
+            try {
+                out.writeUTF(Error.UserAlreadyConnected.name());
+            } catch (IOException e) {
+                System.out.println("error writing User already connected");
             }
 
         } catch (Exception e) {
@@ -72,16 +85,20 @@ public class ClientHandler implements Runnable {
                     Server.clientHandlers.get(recipientSocket.getPort()).out = new DataOutputStream(recipientSocket.getOutputStream()); //reset who the other user writes to
 
                     recipient = getUserToChatWith(out, in);
-                    connectToUser(recipient, out);
                 } else {
 
-//                DataOutputStream recipientOut = new DataOutputStream(Server.Server.getClients().get(recipient).getOutputStream());
+                    out = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
                     out.writeUTF(clientMessage);
                     out.flush();
                 }
 
             } catch (Exception e) {
 //                e.printStackTrace();
+                if (e.getClass() == NoSuchUserException.class || e.getClass() == UserAlreadyConnectedException.class) {
+                    try {
+                        getUserToChatWith(out, in);
+                    } catch (Exception ignored) {}
+                }
                 System.out.println("error in Server.ClientHandler loop");
                 break;
             }
@@ -100,16 +117,18 @@ public class ClientHandler implements Runnable {
         int recipient = Integer.parseInt(recipientStr);
         System.out.println("Attempting to connect to (" + recipient + ")");
 
-        return recipient;
-    }
-
-    public void connectToUser(int recipient, DataOutputStream out) throws Exception {
         if (!userIsOnline(recipient)) { //make sure user is finding a real user and not themselves
             throw new NoSuchUserException();
         } else {
-            System.out.println("Connected to (" + recipient + ")");
-            this.out = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
+            if (Server.getConnections().get(recipient) == 234023483) { //BROKEN
+                throw new UserAlreadyConnectedException();
+            } else {
+                System.out.println("Connected to (" + recipient + ")");
+                this.out = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
+            }
         }
+
+        return recipient;
     }
 
     boolean userIsOnline(int id) {
