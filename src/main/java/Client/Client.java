@@ -2,7 +2,6 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Scanner;
 
 
 public class Client {
@@ -15,8 +14,15 @@ public class Client {
 
     static Thread readMessage, sendMessage;
 
-    public Client() {
-        initializeClient();
+    public Client(String serverAddress, int TCPPort) throws Exception {
+//        try {
+        initializeClient(serverAddress, TCPPort);
+//        } catch (NumberFormatException nfe) {
+//            System.out.println("invalid username bro");
+//            return;
+//        } catch (Exception ignored) {
+//            System.out.println("Exception in client init");
+//        }
 
         final DataOutputStream finalOut = out;
         final BufferedReader finalBr = br;
@@ -27,15 +33,6 @@ public class Client {
                     if (clientMessage.equalsIgnoreCase("quit")) {
                         System.exit(0);
                     }
-//                    File file = new File("/Users/nickviscomi/Desktop/IntelliJ Projects/Sockets/src/main/java/Plan.txt");
-//                    Scanner fileReader = new Scanner(file);
-//                    byte[] content = new byte[1000];
-//                    int i = 0;
-//                    while (fileReader.hasNextByte()) {
-//                        content[i] = fileReader.nextByte();
-//                        i++;
-//                    }
-//                    finalOut.writeBytes(content);
 
                     finalOut.writeUTF(clientMessage);
                 } catch (Exception e) {
@@ -102,30 +99,30 @@ public class Client {
         sendMessage.start();
 
     }
-    public static void main(String[] args) {
-        new Client();
-    }
+//    public static void main(String[] args) {
+//        new Client();
+//    }
 
-    private void initializeClient() {
-        try {
-            socket = new Socket("localhost", 80);
-            out = new DataOutputStream(socket.getOutputStream());
-            in = new DataInputStream(socket.getInputStream());
-            br = new BufferedReader(new InputStreamReader(System.in));
+    private void initializeClient(String serverAddress, int TCPPort) throws Exception {
+//        try {
+        socket = new Socket(serverAddress, TCPPort);
+        out = new DataOutputStream(socket.getOutputStream());
+        in = new DataInputStream(socket.getInputStream());
+        br = new BufferedReader(new InputStreamReader(System.in));
 
-            String username = in.readUTF();
-            System.out.println("Username: " + username);
+        String username = in.readUTF();
+        System.out.println("Username: " + username);
 
-            System.out.print(in.readUTF()); //"enter username to chat with"
-            recipient = Integer.parseInt(br.readLine());
-            out.writeUTF(String.valueOf(recipient));
+        System.out.print(in.readUTF()); //"enter username to chat with"
+        recipient = Integer.parseInt(br.readLine());
+        out.writeUTF(String.valueOf(recipient));
 
-        } catch (NumberFormatException numberFormatException) {
-            System.out.println("invalid username input");
-            System.exit(0);
-        } catch (Exception ignored) {
-            System.out.println("exception in client initialization");
-        }
+//        } catch (NumberFormatException numberFormatException) {
+//            System.out.println("invalid username input");
+//            System.exit(0);
+//        } catch (Exception ignored) {
+//            System.out.println("exception in client initialization");
+//        }
     }
 
     static String addPortNum(String msg, int username) {

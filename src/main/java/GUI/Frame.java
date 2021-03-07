@@ -1,7 +1,7 @@
 package GUI;
 
-import Client.*;
-import Server.*;
+//import Client.*;
+import Server.Server;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,16 +10,17 @@ import java.awt.event.ActionListener;
 
 
 public class Frame extends JPanel implements ActionListener {
-
-    private JFrame frame;
+    static final long serialVersionUID = 1L;
+    
+    private final JFrame frame;
     private final int width = 500, height = 500;
 
-    private JComboBox<String> typeOfUser;
+    private final JComboBox<String> typeOfUser;
     private String options[] = {"Client", "Server"};
 
-    private JButton select;
+    private final JButton select;
 
-
+    boolean serverIsCreated = false, clientIsCreated = false;
     public Frame() {
         setLayout(null);
 
@@ -36,13 +37,13 @@ public class Frame extends JPanel implements ActionListener {
         typeOfUser = new JComboBox<>(options);
         Dimension d1 = typeOfUser.getPreferredSize();
         typeOfUser.setBounds(new Rectangle(250-(d1.width), 230-(d1.height), d1.width * 2, d1.height * 2));
-        typeOfUser.setFont(new Font("Times New Roman", Font.PLAIN, 22));
+        typeOfUser.setFont(new Font("default", Font.PLAIN, 22));
         typeOfUser.setVisible(true);
 
         select = new JButton("Start");
+        select.setFont(new Font("default", Font.BOLD, 24));
         Dimension d2 = select.getPreferredSize();
-        select.setBounds(new Rectangle(250-(d2.width), 300-(d2.height), d2.width * 2, d2.height * 2));
-        select.setFont(new Font("Times New Roman", Font.BOLD, 24));
+        select.setBounds(new Rectangle(250-(d2.width/2), 300-(d2.height/2), d2.width, d2.height));
         select.setForeground(Color.BLACK);
         select.addActionListener(this);
         select.setVisible(true);
@@ -68,15 +69,29 @@ public class Frame extends JPanel implements ActionListener {
             String selected = (String) typeOfUser.getSelectedItem();
             assert selected != null;
             if (selected.equals("Client")) {
+                assert !clientIsCreated;
                 System.out.println("Create: "  + typeOfUser.getSelectedItem());
-                Client client = new Client();
-                new ClientFrame(client);
+//                frame.getContentPane().removeAll();
+//                frame.repaint();
+
+//                ClientFrame clientFrame = new ClientFrame(this);
+//                clientFrame.setFrame();
+                new ClientFrame();
+                clientIsCreated = true;
+
+                frame.repaint();
             } else if (selected.equals("Server")) {
+                assert !clientIsCreated;
                 System.out.println("Create: "  + typeOfUser.getSelectedItem());
-                //maybe can make server object oriented since this is the only place I will be instantiating a Server object
-                //Pass this server object to anyone other class that may need it
+//                frame.getContentPane().removeAll();
+//                frame.repaint();
                 Server server = new Server();
+//                ServerFrame serverFrame = new ServerFrame(server, this);
+//                serverFrame.setFrame();
                 new ServerFrame(server);
+                serverIsCreated = true;
+
+                frame.repaint();
             }
 
         }

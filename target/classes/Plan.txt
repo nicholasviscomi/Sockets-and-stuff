@@ -1,0 +1,21 @@
+
+Idea #1:
+    Client connects to the server and gets the initial message (done)
+    From there, the client can make requests for new data (similar to web browser I think) (done)
+    Use SQL so the people that connect to the server can get, set, post data
+        (i.e. GET nicholasviscomi --> returns fake data about me)
+
+Idea #2 (using):
+    Multithreaded server (done)
+    Client gets sent what port number (acts as username) they are (maybe encrypt this so it is guaranteed to be unique?)
+    From there they are asked what other client they would like to connect to
+    The client they request to chat with will get an invitation they can accept or decline
+    From there, those two users can chat freely (done minus some error handling, the use usually has to rerun the program in case of an error)
+
+    Create a GUI
+    Be able to send files
+    Groupchats
+
+
+
+

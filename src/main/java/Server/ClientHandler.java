@@ -14,9 +14,11 @@ import java.util.HashMap;
 public class ClientHandler implements Runnable {
     Socket socket;
     DataOutputStream out;
+    Server server;
 
-    ClientHandler(Socket s) {
+    ClientHandler(Socket s, Server server) {
         this.socket = s;
+        this.server = server;
     }
 
     @Override
@@ -79,15 +81,15 @@ public class ClientHandler implements Runnable {
                 clientMessage = in.readUTF();
                 if (clientMessage.equalsIgnoreCase("leave")) { //close both clients, ideally would just disconnect them
 
-                    Socket recipientSocket = Server.getClients().get(recipient);
+                    Socket recipientSocket = server.getClients().get(recipient);
                     out = new DataOutputStream(socket.getOutputStream()); //stop writing to the other client
 
-                    Server.clientHandlers.get(recipientSocket.getPort()).out = new DataOutputStream(recipientSocket.getOutputStream()); //reset who the other user writes to
+                    server.getClientHandlers().get(recipientSocket.getPort()).out = new DataOutputStream(recipientSocket.getOutputStream()); //reset who the other user writes to
 
                     recipient = getUserToChatWith(out, in);
                 } else {
 
-                    out = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
+                    out = new DataOutputStream(server.getClients().get(recipient).getOutputStream());
                     out.writeUTF(clientMessage);
                     out.flush();
                 }
@@ -99,7 +101,7 @@ public class ClientHandler implements Runnable {
                         getUserToChatWith(out, in);
                     } catch (Exception ignored) {}
                 }
-                System.out.println("error in Server.ClientHandler loop");
+                System.out.println("error in server.ClientHandler loop");
                 break;
             }
         }
@@ -120,11 +122,11 @@ public class ClientHandler implements Runnable {
         if (!userIsOnline(recipient)) { //make sure user is finding a real user and not themselves
             throw new NoSuchUserException();
         } else {
-            if (Server.getConnections().get(recipient) == 234023483) { //BROKEN
+            if (server.getConnections().get(recipient) == 234023483) { //BROKEN
                 throw new UserAlreadyConnectedException();
             } else {
                 System.out.println("Connected to (" + recipient + ")");
-                this.out = new DataOutputStream(Server.getClients().get(recipient).getOutputStream());
+                this.out = new DataOutputStream(server.getClients().get(recipient).getOutputStream());
             }
         }
 
@@ -133,8 +135,8 @@ public class ClientHandler implements Runnable {
 
     boolean userIsOnline(int id) {
         //CLIENTS DOES NOT REMOVE A CLIENT WHEN THE GO OFFLINE
-//        System.out.println("clients: " + Server.Server.getClients());
-        HashMap<Integer, Socket> clients = Server.getClients();
+//        System.out.println("clients: " + server.server.getClients());
+        HashMap<Integer, Socket> clients = server.getClients();
         Socket user = clients.get(id);
 
         return (user != null) && (!(user.getPort() == socket.getPort()));

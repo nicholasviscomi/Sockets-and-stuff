@@ -1,5 +1,7 @@
 package Server;
 
+import GUI.ServerFrame;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -7,12 +9,13 @@ import java.util.HashMap;
 
 public class Server {
 
-    static ServerSocket ss;
-    static Socket socket;
+    private ServerSocket ss;
+    Socket socket;
+    public ServerFrame serverFrame;
 
-    static HashMap<Integer, Socket> clients = new HashMap<>();
-    static HashMap<Integer, ClientHandler> clientHandlers = new HashMap<>();
-    static HashMap<Integer, Integer> connections = new HashMap<>();
+    private final HashMap<Integer, Socket> clients = new HashMap<>();
+    private final HashMap<Integer, ClientHandler> clientHandlers = new HashMap<>();
+    private final HashMap<Integer, Integer> connections = new HashMap<>();
 
     public Server() {
         try {
@@ -21,28 +24,41 @@ public class Server {
             e.printStackTrace();
         }
 
-        while (true) {
-            try {
-                socket = ss.accept();
-                clients.put(socket.getPort(), socket);
-                connections.put(socket.getPort(), 0);
-                System.out.println("Connected: " + socket.getInetAddress().getHostAddress() + " Username: " + socket.getPort());
-            } catch (Exception e) {
-                e.printStackTrace();
-                break;
-            }
-            ClientHandler clientHandler = new ClientHandler(socket);
+        Server self = this;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        socket = ss.accept();
+                        clients.put(socket.getPort(), socket);
+                        connections.put(socket.getPort(), 0);
 
-            new Thread(clientHandler).start();
-        }
+                        serverFrame.updateTable(String.valueOf(socket.getPort()), String.valueOf(socket.getInetAddress().getHostAddress()), "nil");
+                        System.out.println("Connected: " + socket.getInetAddress().getHostAddress() + " Username: " + socket.getPort());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                    ClientHandler clientHandler = new ClientHandler(socket, self);
+
+                    new Thread(clientHandler).start();
+                }
+            }
+        });
+
     }
 
-    public static void main(String[] args) { }
+    public static void main(String[] args) {
+        new Server();
+    }
 
-    static HashMap<Integer, Socket> getClients() {
+    public ServerSocket getServerSocket() { return ss; }
+    public HashMap<Integer, Socket> getClients() {
         return clients;
     }
-    static HashMap<Integer, Integer> getConnections() { return connections; }
+    public HashMap<Integer, Integer> getConnections() { return connections; }
+    public HashMap<Integer, ClientHandler> getClientHandlers() { return clientHandlers; }
 }
 
 
